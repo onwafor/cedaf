@@ -3,6 +3,12 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from PIL import Image  # Python Imaging Library
+
+# Load your image
+image = Image.open("cedaf_ai2.png")  # or .png, .gif, etc.
+
+
 
 st.set_page_config(layout="wide")
 
@@ -66,6 +72,10 @@ def main():
     st.markdown("<p style='text-align: center; font-size: 30px;'>Cyber Risk Insurance Quantification Model </p>", 
     unsafe_allow_html=True )
 
+    # Display in sidebar
+    st.sidebar.image(image)
+    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+    
     # Sidebar filters
     st.sidebar.header("Filter Data")
     
