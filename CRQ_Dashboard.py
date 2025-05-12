@@ -341,6 +341,8 @@ def create_dashboard_visualizations(df):
             st.pyplot(fig)
 
     with tab5:
+        st.markdown( "<h1 style='font-size: 16px; text-align: left;'>Enter the values for the parameters and click the [ PREDICT >>  ] Button </h1>", 
+            unsafe_allow_html=True )
         col1, col2 = st.columns(2)
         with col1:
             # Create input fields based on the model's features
