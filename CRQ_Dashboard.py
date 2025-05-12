@@ -95,7 +95,7 @@ def main():
 
     # Display in sidebar
     #st.sidebar.image(image)
-    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+    #st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
     
     # Sidebar filters
     st.sidebar.header("Filter Data")
@@ -120,7 +120,7 @@ def main():
         value=(min_freq, max_freq)
     )
     
-    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+    #st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
 
 
 
