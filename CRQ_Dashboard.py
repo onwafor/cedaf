@@ -99,15 +99,18 @@ def main():
     
     # Sidebar filters
     st.sidebar.header("Filter Data")
-    
+    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+
     # Get unique values for filters
     all_industries = ["All"] + sorted(df["Industry"].unique().tolist())
     all_vectors = ["All"] + sorted(df["Attack Vector"].unique().tolist())
     
     # Create dropdown filters
     selected_industry = st.sidebar.selectbox("Select Industry", all_industries)
+    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
     selected_attack = st.sidebar.selectbox("Select Attack Vector", all_vectors)
-    
+    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+   
     # Create frequency slider
     min_freq, max_freq = int(df['Frequency'].min()), int(df['Frequency'].max())
     freq_range = st.sidebar.slider(
