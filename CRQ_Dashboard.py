@@ -1,16 +1,35 @@
 import streamlit as st
 import pandas as pd
+from xgboost import XGBRegressor
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import pickle
 from PIL import Image  # Python Imaging Library
 
+# Check for XGBoost and install if needed
+try:
+    from xgboost import XGBRegressor
+except ImportError:
+    st.warning("XGBoost not found. Installing now...")
+    import subprocess
+    import sys
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "xgboost"])
+    from xgboost import XGBRegressor
+
 # Load your image
-image = Image.open("cedaf_ai2.png")  # or .png, .gif, etc.
-
-
+# image = Image.open("cedaf_ai2.png")  # or .png, .gif, etc.
 
 st.set_page_config(layout="wide")
+
+# Load Model
+with open('xgb_model.pkl', 'rb') as file:
+    model = pickle.load(file)
+
+# Load Model metadata
+with open('model_metadata.pkl', 'rb') as file:
+    metadata = pickle.load(file)
+
 
 
 @st.cache_data  # Cache the data loading and calculations
@@ -69,11 +88,13 @@ def main():
 
     st.markdown("<h1 style='text-align: center; font-size: 60px;color: #002a6f ;'> Executive Dashboard</h1>", 
     unsafe_allow_html=True )
-    st.markdown("<p style='text-align: center; font-size: 30px;'>Cyber Risk Insurance Quantification Model </p>", 
+    st.markdown("<p style='text-align: center; font-size: 30px;'>Cyber Risk Intelligence Analytics </p>", 
     unsafe_allow_html=True )
+    st.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+
 
     # Display in sidebar
-    st.sidebar.image(image)
+    #st.sidebar.image(image)
     st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
     
     # Sidebar filters
@@ -96,6 +117,7 @@ def main():
         value=(min_freq, max_freq)
     )
     
+    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
 
 
 
@@ -114,6 +136,7 @@ def main():
     
     # Display filtered data stats
     st.sidebar.write(f" {len(filtered_df)} records matching your filters")
+    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
     
     # Create dashboard visualizations
     create_dashboard_visualizations(filtered_df)
@@ -131,7 +154,7 @@ def create_dashboard_visualizations(df):
     df_top_vector = df[df['Attack Vector'].isin(top_vectors)]
     
     # Create tabs for different visualizations
-    tab1, tab2, tab3, tab4 = st.tabs(["Risk Overview", "Exposure Analysis", "CVaR Heatmap", "Residual Risk and Portfolio Simulation"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Risk Overview", "Exposure Analysis", "CVaR Heatmap", "Residual Risk and Portfolio Simulation", "PREDICTIVE ANALYTICS"])
     
     with tab1:
         # First row of charts
@@ -313,6 +336,71 @@ def create_dashboard_visualizations(df):
             ax.set_ylabel("Frequency")
             ax.legend()
             st.pyplot(fig)
+
+    with tab5:
+        col1, col2 = st.columns(2)
+        with col1:
+            # Create input fields based on the model's features
+            input_data = {}
+
+            # Numerical features with sliders
+            input_data['Frequency'] = st.slider(
+                "Frequency (number of incidents)",
+                min_value=1, max_value=20, value=10
+            )
+
+            input_data['Vulnerability Score'] = st.number_input(
+                "Vulnerability Score (0-1)",
+                min_value=0.1, max_value=1.0, value=0.1
+            )
+
+            input_data['Control Maturity Score'] = st.number_input(
+                "Control Maturity Score (0-1)",
+                min_value=0.0, max_value=1.0, value=0.1
+            )
+
+            input_data['Primary Loss ($)'] = st.number_input(
+                "Primary Loss ($)",
+                min_value=0, value=500000, step=10000
+            )
+
+            input_data['Secondary Loss ($)'] = st.number_input(
+                "Secondary Loss ($)",
+                min_value=0, value=100000, step=10000
+            )
+
+            input_data['Downtime (hrs)'] = st.number_input(
+                "Downtime (hours)",
+                min_value=1, max_value=120, value=30
+            )
+
+            input_data['Risk Exposure Score'] = st.number_input(
+                "Risk Exposure Score (0-1)",
+                min_value=0.0, max_value=1.0, value=0.35, step=0.01
+            )
+
+
+        with col2:
+            # Calculate total loss (primary + secondary)
+            input_data['Total Loss ($)'] = input_data['Primary Loss ($)'] + input_data['Secondary Loss ($)']
+
+            # Display calculated total loss
+            st.markdown(f"**Calculated Total Loss:** ${input_data['Total Loss ($)']:,.2f}")
+
+            # Predict button
+            if st.button("PREDICT >> "):
+                # Convert input to DataFrame in correct feature order
+                input_df = pd.DataFrame([input_data], columns=metadata['features'])
+                
+                # Make prediction
+                prediction = model.predict(input_df)[0]
+                
+                # Display prediction
+                st.subheader("Prediction Result")
+                st.success(f"Predicted Expected Annual Loss (EAL): **${prediction:,.2f}**")
+                
+                
+
 
 
 
