@@ -90,7 +90,7 @@ def main():
     unsafe_allow_html=True )
     st.markdown("<p style='text-align: center; font-size: 30px;'>Cyber Risk Intelligence Analytics </p>", 
     unsafe_allow_html=True )
-    st.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+    #st.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
 
 
     # Display in sidebar
