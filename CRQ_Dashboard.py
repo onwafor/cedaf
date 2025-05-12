@@ -120,7 +120,7 @@ def main():
         value=(min_freq, max_freq)
     )
     
-    #st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
 
 
 
@@ -139,7 +139,7 @@ def main():
     
     # Display filtered data stats
     st.sidebar.write(f" {len(filtered_df)} records matching your filters")
-    st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
+    #st.sidebar.markdown("<hr style='border:1px solid #002a6f '>", unsafe_allow_html=True)
     
     # Create dashboard visualizations
     create_dashboard_visualizations(filtered_df)
