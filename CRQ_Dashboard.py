@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pickle
+import shap
 from PIL import Image  # Python Imaging Library
 
 # Check for XGBoost and install if needed
@@ -341,59 +342,85 @@ def create_dashboard_visualizations(df):
             st.pyplot(fig)
 
     with tab5:
-        st.markdown( "<h1 style='font-size: 16px; text-align: left;'>Enter the values for the parameters and click the [ PREDICT >>  ] Button </h1>", 
-            unsafe_allow_html=True )
+        if 'predict_clicked' not in st.session_state:
+            st.session_state.predict_clicked = False
+
+
         col1, col2 = st.columns(2)
+        col2.markdown('<div class="custom-column">', unsafe_allow_html=True)
         with col1:
+            st.markdown("<h1 style='font-size: 18px; text-align: left;'>Enter the values for the parameters and click the [ PREDICT >>  ] Button </h1>",unsafe_allow_html=True ) 
+
+
             # Create input fields based on the model's features
             input_data = {}
 
-            # Numerical features with sliders
+            #slider
             input_data['Frequency'] = st.slider(
-                "Frequency (number of incidents)",
+                "Select Frequency (number of incidents)",
                 min_value=1, max_value=20, value=10
             )
+            
+            col3, col4 = st.columns(2)
+            with col3:
+                all_industries = sorted(df["Industry"].unique().tolist())
+                all_vectors = sorted(df["Attack Vector"].unique().tolist())
 
-            input_data['Vulnerability Score'] = st.number_input(
-                "Vulnerability Score (0-1)",
-                min_value=0.1, max_value=1.0, value=0.1
-            )
+                input_data['Industry'] = st.selectbox("Select Industry", all_industries)
+                input_data['Attack Vector'] = st.selectbox("Select Attack Vector", all_vectors)
 
-            input_data['Control Maturity Score'] = st.number_input(
-                "Control Maturity Score (0-1)",
-                min_value=0.0, max_value=1.0, value=0.1
-            )
+                input_data['Primary Loss ($)'] = st.number_input(
+                    "Primary Loss ($)",
+                    min_value=0, value=500000, step=10000
+                )
+                input_data['Secondary Loss ($)'] = st.number_input(
+                    "Secondary Loss ($)",
+                    min_value=0, value=100000, step=10000
+                )
 
-            input_data['Primary Loss ($)'] = st.number_input(
-                "Primary Loss ($)",
-                min_value=0, value=500000, step=10000
-            )
+            with col4:
+                input_data['Vulnerability Score'] = st.number_input(
+                    "Vulnerability Score (0-1)",
+                    min_value=0.1, max_value=1.0, value=0.1
+                )
 
-            input_data['Secondary Loss ($)'] = st.number_input(
-                "Secondary Loss ($)",
-                min_value=0, value=100000, step=10000
-            )
-
-            input_data['Downtime (hrs)'] = st.number_input(
-                "Downtime (hours)",
-                min_value=1, max_value=120, value=30
-            )
-
-            input_data['Risk Exposure Score'] = st.number_input(
-                "Risk Exposure Score (0-1)",
-                min_value=0.0, max_value=1.0, value=0.35, step=0.01
-            )
-
-
-        with col2:
+                input_data['Control Maturity Score'] = st.number_input(
+                    "Control Maturity Score (0-1)",
+                    min_value=0.0, max_value=1.0, value=0.1
+                )
+                input_data['Downtime (hrs)'] = st.number_input(
+                    "Downtime (hours)",
+                    min_value=1, max_value=120, value=30
+                )
+                input_data['Risk Exposure Score'] = st.number_input(
+                    "Risk Exposure Score (0-1)",
+                    min_value=0.0, max_value=1.0, value=0.35, step=0.01
+                )
+                predict_button = st.button("PREDICT >> ")
             # Calculate total loss (primary + secondary)
             input_data['Total Loss ($)'] = input_data['Primary Loss ($)'] + input_data['Secondary Loss ($)']
 
             # Display calculated total loss
             st.markdown(f"**Calculated Total Loss:** ${input_data['Total Loss ($)']:,.2f}")
+            
 
+        with col2:
+            # Calculate total loss (primary + secondary)
+            #input_data['Total Loss ($)'] = input_data['Primary Loss ($)'] + input_data['Secondary Loss ($)']
+
+            # Display calculated total loss
+            #st.markdown(f"**Calculated Total Loss:** ${input_data['Total Loss ($)']:,.2f}")
+            
+            #predict_button = st.button("PREDICT >> ")
+            if predict_button:
+                st.session_state.predict_clicked = True
+            
+            if st.session_state.predict_clicked:
+                #st.write(f"Prediction result for {input1} and {input2}")
+                #st.session_state.predict_clicked = False  # Reset for next click
+            
             # Predict button
-            if st.button("PREDICT >> "):
+            #if st.button("PREDICT >> "):
                 # Convert input to DataFrame in correct feature order
                 input_df = pd.DataFrame([input_data], columns=metadata['features'])
                 
@@ -401,9 +428,37 @@ def create_dashboard_visualizations(df):
                 prediction = model.predict(input_df)[0]
                 
                 # Display prediction
-                st.subheader("Prediction Result")
+                st.write("#### Prediction Result")
                 st.success(f"Predicted Expected Annual Loss (EAL): **${prediction:,.2f}**")
                 
+                # Create SHAP explainer
+                explainer = shap.Explainer(model)
+                shap_values = explainer(input_df)
+                
+                
+                # Plot 1: Summary plot (feature importance)
+                #st.write("### Global Feature Importance")
+                #fig1, ax1 = plt.subplots()
+                #shap.plots.beeswarm(shap_values, show=False)
+                #st.pyplot(fig1)
+                
+                # Plot 2: Force plot for this specific prediction
+                st.write("##### How Each Factor Affects This Prediction")
+                fig2, ax2 = plt.subplots(figsize=(10, 1))
+                shap.plots.waterfall(shap_values[0], max_display=10, show=False)
+                plt.tight_layout()
+                st.pyplot(fig2)
+                
+                # Plot 3: Bar plot of SHAP values
+                #st.write("### Feature Contributions")
+                #fig3, ax3 = plt.subplots()
+                #shap.plots.bar(shap_values[0], show=False)
+                #st.pyplot(fig3)
+                
+                # Show the actual input values
+                #st.subheader("Input Values Used")
+                #st.dataframe(input_df.style.format("${0:,.2f}", subset=['Primary Loss ($)', 'Secondary Loss ($)', 'Total Loss ($)']))
+
                 
 
 
